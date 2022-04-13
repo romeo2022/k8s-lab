@@ -3,20 +3,20 @@ Vagrant.require_version ">= 2.0.0"
 boxes = [
     {
         :name => "master",
-        :eth1 => "192.168.205.10",
+        :eth1 => "192.168.10.100",
         :mem => "2048",
         :cpu => "1"
     },
     {
         :name => "worker1",
-        :eth1 => "192.168.205.11",
-        :mem => "1024",
+        :eth1 => "192.168.10.101",
+        :mem => "2048",
         :cpu => "1"
     },
     {
         :name => "worker2",
-        :eth1 => "192.168.205.12",
-        :mem => "1024",
+        :eth1 => "192.168.205.102",
+        :mem => "2048",
         :cpu => "1"
     }
 
@@ -35,4 +35,21 @@ Vagrant.configure(2) do |config|
         config.vm.network :private_network, ip: opts[:eth1]
       end
   end
+
+  config.vm.provision "shell", inline: <<-SHELL
+    sudo apt install apt-transport-https ca-certificates curl software-properties-common
+#    sudo systemctl disable systemd-resolved
+#    sudo rm -rf /etc/run/systemd/resolve/stub-resolv.conf /etc/resolv.conf
+#    sudo echo "nameserver  8.8.8.8" > /etc/resolv.conf
+    curl -fsSL https://download.docker.com/linux/ubuntu/gpg | sudo apt-key add -
+    sudo add-apt-repository "deb [arch=amd64] https://download.docker.com/linux/ubuntu bionic stable"
+    curl -s https://packages.cloud.google.com/apt/doc/apt-key.gpg | sudo apt-key add -
+    echo "deb http://apt.kubernetes.io/ kubernetes-xenial main" >> ~/kubernetes.list
+    sudo mv ~/kubernetes.list /etc/apt/sources.list.d
+    sudo apt update
+    echo "KUBELET_EXTRA_ARGS=--node-ip="$(ip addr show eth1  | awk '$1 == "inet" { print $2 }' | cut -d/ -f1) | sudo tee /etc/default/kubelet
+    sudo apt install -y docker-ce kubelet kubeadm kubectl kubernetes-cni git
+    sudo swapoff -a
+  SHELL
+
 end
