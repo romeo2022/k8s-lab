@@ -5,7 +5,7 @@ boxes = [
         :name => "master",
         :eth1 => "192.168.205.100",
         :mem => "2048",
-        :cpu => "1"
+        :cpu => "2"
     },
     {
         :name => "worker1",
